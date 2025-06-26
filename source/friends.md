@@ -1,6 +1,6 @@
 ---
 title: 千夏的小伙伴们
-date: 2024-05-03 13:12:27
+date: 2025-06-26 13:12:27
 ---
 
 <div class="post-body">
@@ -75,26 +75,6 @@ date: 2024-05-03 13:12:27
          }
       </style>
       <div class="links-content">
-         <div class="link-navigation">
-            <div class="card">
-               <img class="ava" src="/blog/static/friends/SuperSkidder.png" lazyload="false" />
-               <div class="card-header">
-                  <div>
-                     <a href="https://skidder.top/">SuperSkidder’s blog</a>
-                  </div>
-                  <div class="info">Author of FPSMaster Client, Hanabi Client, etc..</div>
-               </div>
-            </div>
-            <div class="card">
-               <img class="ava" src="https://me.owo.today/wp-content/uploads/2023/09/photo.jpg" lazyload="true" />
-               <div class="card-header">
-                  <div>
-                     <a href="https://me.OwO.today">小夏鸢的波子汽水店</a>
-                  </div>
-                  <div class="info">鸢飞戾天者，望峰息心。</div>
-               </div>
-            </div>
-         </div>
       </div>
    </div>
 </div>
