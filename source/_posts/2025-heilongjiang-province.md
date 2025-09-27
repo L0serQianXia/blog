@@ -153,7 +153,132 @@ kafuka压缩包中存在一个加密的图片，经分析非伪加密，开始�
 
 ### MISC-2
 
-USB协议分析，待填坑
+与网上的4字节数据包不同，这个鼠标抓取到的协议是6字节的：
 
+![image-20250927144447488](image-20250927144447488.png)
 
+搜索资料得知，这种是报告协议，数据包的结构在报告描述符中有说明，果然在开头发现了报告描述符
 
+![image-20250927145020434](image-20250927145020434.png)
+
+各个含义详见参考资料中的引用文章
+
+根据报告描述符中对数据包结构的描述，可以计算出数据大小：
+
+`5 * 1 + 1 * 3 + 12 * 2 + 8 * 1 = 40（bit）= 5bytes`
+
+而实际捕获的数据为6字节，因为第一个字节是Report ID，可以忽略
+
+修改现成的脚本[USB-Mouse-Pcap-Visualizer](https://github.com/WangYihang/USB-Mouse-Pcap-Visualizer)，使其可以解析6字节的数据，关键解析代码如下（AI编写）：
+
+```python
+def parse_hid_mouse_report(data, has_report_id=True):
+    """
+    解析 HID 鼠标报告
+    
+    参数:
+        data: bytes 或 list，例如 b'\x01\x01\x01\x10\x00\x00' 或 [1, 1, 1, 16, 0, 0]
+        has_report_id: bool，若第一个字节是 Report ID 则为 True（默认）
+    
+    返回:
+        dict: 包含 buttons, x, y, wheel 的解析结果
+    """
+    if isinstance(data, list):
+        data = bytes(data)
+    
+    # 跳过 Report ID（如果存在）
+    payload = data[1:] if has_report_id else data
+    
+    if len(payload) != 5:
+        raise ValueError(f"Expected 5-byte payload, got {len(payload)} bytes")
+    
+    # 将 5 字节展开为 40 位的位流（bit 0 到 39）
+    # 规则：每个字节内部 bit0 (LSB) 是该字节的第 0 位
+    bits = []
+    for byte in payload:
+        for i in range(8):  # i=0 是 LSB
+            bits.append((byte >> i) & 1)
+    # 现在 bits[0] = bit0, bits[1] = bit1, ..., bits[39] = bit39
+
+    # 提取按钮（bit 0-4）
+    buttons = [bits[i] for i in range(5)]  # [B1, B2, B3, B4, B5]
+
+    # 提取 X（bit 8-19，共12位）
+    x = 0
+    for i in range(12):
+        if bits[8 + i]:
+            x |= (1 << i)
+    # 转为有符号 12 位整数
+    if x >= (1 << 11):
+        x -= (1 << 12)
+
+    # 提取 Y（bit 20-31，共12位）
+    y = 0
+    for i in range(12):
+        if bits[20 + i]:
+            y |= (1 << i)
+    if y >= (1 << 11):
+        y -= (1 << 12)
+
+    # 提取 Wheel（bit 32-39，8位有符号）
+    wheel = 0
+    for i in range(8):
+        if bits[32 + i]:
+            wheel |= (1 << i)
+    if wheel >= (1 << 7):
+        wheel -= (1 << 8)
+
+    return {
+        "buttons": {
+            "left": bool(buttons[0]),
+            "right": bool(buttons[1]),
+            "middle": bool(buttons[2]),
+            "btn4": bool(buttons[3]),
+            "btn5": bool(buttons[4]),
+        },
+        "x": x,
+        "y": y,
+        "wheel": wheel,
+        "raw_buttons": buttons,
+    }
+```
+
+修改部分：
+
+```python
+def parse_packet(payload):
+    items = [struct.unpack('b', bytes.fromhex(i))[0]
+             for i in payload.split(":")]
+
+    state, movement_x, movement_y = 0, 0, 0
+
+    if len(items) == 4:
+        state, movement_x, movement_y, _ = items
+
+    if len(items) == 6:
+        _, state, _, _, _, _,= items
+
+    a = parse_hid_mouse_report(bytes.fromhex(payload.replace(':', '')))
+
+    movement_x = a['x']
+    movement_y = a['y']
+
+    left_button_holding = state & Opcode.LEFT_BUTTON_HOLDING.value != 0
+    right_button_holding = state & Opcode.RIGHT_BUTTON_HOLDING.value != 0
+
+    return movement_x, movement_y, left_button_holding, right_button_holding
+```
+
+最后利用工具自带的绘图网页进行绘图，如下：
+
+<img src="GIF 2025-9-27 14-58-18.gif" alt="GIF 2025-9-27 14-58-18" />
+
+得到字符串：`USB2004113`
+
+## 参考资料
+
+[USB HID 流量分析详解](https://www.morphedge.com/archives/usb-hid-traffic-analysis#)
+
+[USB协议详解第10讲（USB描述符-报告描述符）-CSDN博客](https://blog.csdn.net/weiaipan1314/article/details/112504129)
+
+[WangYihang/USB-Mouse-Pcap-Visualizer: USB mouse traffic packet forensic tool, mainly used to draw mouse movements and dragging trajectories](https://github.com/WangYihang/USB-Mouse-Pcap-Visualizer)
