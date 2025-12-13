@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史知识测验系统 - 支持多选题</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .options-container {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .option:hover {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+        }
+        
+        .option.selected {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+        
+        .option.correct {
+            border-color: #2ecc71;
+            background-color: #e8f5e9;
+        }
+        
+        .option.incorrect {
+            border-color: #e74c3c;
+            background-color: #ffeaea;
+        }
+        
+        .option-letter {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        /* 多选题的复选框样式 */
+        .checkbox {
+            position: absolute;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3498db;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+        }
+        
+        .checkbox::after {
+            content: "";
+            display: none;
+            width: 8px;
+            height: 14px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .option.selected .checkbox::after {
+            display: block;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            color: white;
+            box-shadow: 0 4px 8px rgba(155, 175, 180, 0.3);
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(155, 175, 180, 0.4);
+        }
+        
+        .progress {
+            text-align: center;
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .result {
+            text-align: center;
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .result p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        
+        .multiselect-hint {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .mode-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .mode-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .question-text {
+                font-size: 16px;
+            }
+            
+            .option {
+                padding: 12px;
+            }
+            
+            .checkbox {
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>历史知识测验系统</h1>
+        
+        <div class="mode-selector">
+            <button class="mode-btn" id="sequentialMode">顺序做题模式</button>
+            <button class="mode-btn" id="randomMode">随机做题模式</button>
+        </div>
+        
+        <div class="question-container">
+            <div class="question-header">
+                <span class="question-type">单选题</span>
+                <span class="question-score">1.0 分</span>
+            </div>
+            <div class="question-text" id="questionText">问题内容</div>
+            
+            <div class="multiselect-hint" id="multiselectHint" style="display: none;">
+                提示：这是一道多选题，请选择所有正确答案
+            </div>
+            
+            <div class="options-container" id="optionsContainer">
+                <!-- 选项将在这里动态生成 -->
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn submit-btn" id="submitBtn" disabled>提交答案</button>
+            <button class="btn reset-btn" id="resetBtn">重新开始</button>
+        </div>
+        
+        <div class="progress" id="progress">第 1 题 / 共 3 题</div>
+        
+        <div class="result" id="result">
+            <h2>测验完成！</h2>
+            <p>你已经完成了所有题目。</p>
+            <p>点击"重新开始"开始新的测验。</p>
+        </div>
+    </div>
+
+    <script>
+        // 测验数据
+        const quizData = {
+  "(单选题, 1.0 分) 20世纪50年代中期,上海的一位民主人士说:“对于我，失去的是我个人的一些剥削所得，它比起国家第一个五年计划的投资总额是多么渺小;得到的却是一个人人富裕、繁荣强盛的社会主义国家。”这段话指的是 ( )": {
+    "选项": "A. 资本主义工商业社会主义改造\nB. 个体手工业社会主义改造\nC. 个体农业社会主义改造\nD. 合作社经济社会主义改造",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 1981年6月，中共十一届六中全会通过的重要决议是 ( )": {
+    "选项": "A. 《关于党的若干历史问题的决议》\nB. 《关于教育体制改革的决定》\nC. 《关于加强社会主义精神文明建设若干重要问题的决议》\nD. 《关于建国以来党的若干历史问题的决议》",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 标志着中国资产阶级领导的旧民主主义革命终结的事件是 ( )": {
+    "选项": "A. 护国运动的失败\nB. 护法运动的失败\nC. “二次革命”的失败\nD. 辛亥革命的失败",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) “十月革命一声炮响，给我们送来了马克思列宁主义”。在中国最早讴歌十月革命，比较系统地介绍马克思主义的是 ( )": {
+    "选项": "A. 陈望道\nB. 毛泽东\nC. 李大钊\nD. 陈独秀",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 共产党独立领导革命战争、创建人民军队和武装夺取政权的开端是( )": {
+    "选项": "A. 三湾改编\nB. 南昌起义\nC. 广州起义\nD. 秋收起义",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 中国发展国民经济的第一个五年计划，建设的中心环节优先发展 ( )": {
+    "选项": "A. 工业\nB. 轻工业\nC. 农业\nD. 重工业",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 中国共产党在长期奋斗中构建起中国共产党人的精神谱系，锤炼出鲜明的政治品格。中国共产党的精神之源是 ( )": {
+    "选项": "A. 伟大建党精神\nB. 伟大团结精神\nC. 伟大创新精神\nD. 伟大奋斗精神",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 中国进入社会主义初级阶段的标志是 ( )": {
+    "选项": "A. 确立过渡时期总路线\nB. 国民经济恢复\nC. 社会主义改造的基本完成\nD. 中华人民共和国的成立",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 在孙中山的思想中，“平均地权”“节制资本”属于 ( )": {
+    "选项": "A. 民族主义\nB. 民权主义\nC. 民生主义\nD. 民主主义",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 在新民主主义革命时期，中国共产党在不同阶段建立了不同性质的革命政权。在土地革命战争时期建立的苏维埃政权的性质是 ( )": {
+    "选项": "A. 各个革命阶级的联合专政\nB. 一切赞成反帝又赞成民主的人们的政权\nC. 人民民主专政\nD. 工农民主专政",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 太平天国失败的根本原因是 ( )": {
+    "选项": "A. 中外反动势力联合镇压\nB. 农民阶级的局限性\nC. 军事指挥失误\nD. 缺乏科学理论指导",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 中国共产党在过渡时期总路线的主体是 ( )": {
+    "选项": "A. 实现国家的社会主义工业化\nB. 对个体手工业的社会主义改造\nC. 对个体农业的社会主义改造\nD. 对资本主义工商业的社会主义改造",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 把习近平新时代中国特色社会主义思想同马克思列宁主义、毛泽东思想、邓小平理论、“三个代表”重要思想、科学发展观一道确立为党的行动指南，是在 ( )": {
+    "选项": "A. 党的十九大\nB. 党的十七大\nC. 党的二十大\nD. 党的十八大",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 抗战初期，国民党正面战场的多次战役，其最重要的意义在于 ( )": {
+    "选项": "A. 消灭了日本大量有生力量\nB. 掌握了抗日战争的主动权\nC. 粉碎了日军速战速决的侵略计划\nD. 取得了抗战以来的最大胜利",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 中国近代历史上第一个比较系统地发展资本主义的方案是 ( )": {
+    "选项": "A. 《海国图志》\nB. 《盛世危言》\nC. 《资政新篇》\nD. 《救亡决论》",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 习近平新时代中国特色社会主义思想的核心要义是 ( )": {
+    "选项": "A. 夺取新时代中国特色社会主义伟大胜利\nB. 决胜全面建成小康社会\nC. 实现中华民族伟大复兴\nD. 坚持和发展中国特色社会主义",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 中国进入改革开放和社会主义现代化建设的历史新时期的起点是 ( )": {
+    "选项": "A. 党的十一届三中全会\nB. 党的十二大\nC. 党的十一届六中全会\nD. 真理标准的讨论",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 戊戌变法期间，光绪帝颁布的变法法令中直接触及封建官僚利益的是( )": {
+    "选项": "A. 裁撤冗官冗员\nB. 鼓励私人办厂\nC. 废除八股取士\nD. 兴办新式学堂",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 中国共产党成立的标志是 ( )": {
+    "选项": "A. 各地共产党早期组织的建立\nB. 中共一大的召开\nC. 马克思主义研究会的成立\nD. 《中国共产党宣言》的制定",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 1940年，八路军发动了百团大战，作战地区在 ( )": {
+    "选项": "A. 西北地区\nB. 西南地区\nC. 华北地区\nD. 东北地区",
+    "正确答案": "C"
+  },
+  "(多选题, 2.0 分) 1905年孙中山在《民报》发刊词中，将同盟会纲领概括为 ( )": {
+    "选项": "A. 民生主义\nB. 民族主义\nC. 民治主义\nD. 民权主义",
+    "正确答案": "ABD"
+  },
+  "(多选题, 2.0 分) 新三民主义与三民主义相比，增加了 ( )": {
+    "选项": "A. 平均地权\nB. 民权为一般平民所共有\nC. 反帝的内容\nD. 节制资本",
+    "正确答案": "BCD"
+  },
+  "(多选题, 2.0 分) 中共二大主要的历史功绩是制定了彻底的反帝反封建的民主革命纲领，其中在当前阶段的纲领内容包括 ( )": {
+    "选项": "A. 实现社会主义、共产主义\nB. 统一中国为真正民主共和国\nC. 推翻国际帝国主义的压迫\nD. 打倒军阀",
+    "正确答案": "BCD"
+  },
+  "(多选题, 2.0 分) 太平天国运动失败的外部原因是 ( )": {
+    "选项": "A. 缺乏统一领导\nB. 中外反动势力联合镇压\nC. 农民阶级存在局限性\nD. 湘军、淮军围攻",
+    "正确答案": "BD"
+  },
+  "(多选题, 2.0 分) 抗日战争分为以下几个阶段 ( )": {
+    "选项": "A. 战略反攻\nB. 战略防御\nC. 战略决战\nD. 战略相持",
+    "正确答案": "ABD"
+  },
+  "(多选题, 2.0 分) 下列属于李大钊著作的是 ( )": {
+    "选项": "A. 《庶民的胜利》\nB. 《我的马克思主义观》\nC. 《布尔什维主义的胜利》\nD. 《法俄革命之比较观》",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 1924年1月，中国国民党第一次全国代表大会确立的三大政策是 ( )": {
+    "选项": "A. 扶助农工\nB. 联共\nC. 联俄\nD. 节制资本",
+    "正确答案": "ABC"
+  },
+  "(多选题, 2.0 分) 1948年9月12日至1949年1月31日，中国人民解放军发动的三大战略决战是 ( )": {
+    "选项": "A. 辽沈战役\nB. 淮海战役\nC. 渡江战役\nD. 平津战役",
+    "正确答案": "ABD"
+  },
+  "(多选题, 2.0 分) 新民主主义革命的主要任务是推翻“三座大山”，“三座大山”指 ( )": {
+    "选项": "A. 官僚资本主义\nB. 封建主义\nC. 民族资本主义\nD. 帝国主义",
+    "正确答案": "ABD"
+  },
+  "(多选题, 2.0 分) 科学发展观是我们党坚持以马克思列宁主义、毛泽东思想、邓小平理论和“三个代表”重要思想为指导，在准确把握世界发展趋势、认真总结我国发展经验、深入分析我国发展阶段性特征的基础上提出来的。科学发展观的科学内涵是 ( )": {
+    "选项": "A. 根本方法是统筹兼顾\nB. 核心立场是以人为本\nC. 第一要义是发展\nD. 基本要求是全面协调可持续",
+    "正确答案": "ABCD"
+  },
+  "(判断题, 1.0 分) 洋务运动成功实现了“自强”“求富”的目标。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 1953年实施第一个五年计划，集中主要力量优先发展重工业。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 毛泽东思想的精髓是解放思想、实事求是。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 新文化运动兴起的标志是蔡元培担任北京大学校长。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 中国近代第一个领导资产阶级革命的全国性政党是中国同盟会。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 毛泽东在谈到辛亥革命时指出，辛亥革命有它胜利的地方，也有它失败的地方。“辛亥革命把皇帝赶跑，这不是胜利了吗?说它失败，是说辛亥革命只把一个皇帝赶跑。”毛泽东这里所说的“只把一个皇帝赶跑”是指反帝反封建的革命任务没有完成。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国近代第一个领导资产阶级革命的全国性政党是中国同盟会。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国是世界上少有的历史文化从未间断，一直延续至今的国家。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国的改革开放,最早是在城市起步的。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 中国进入社会主义社会最主要的标志是社会主义经济制度的建立。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 毛泽东在谈到辛亥革命时指出辛亥革命有它胜利的地方，也有它失败的地方。“辛亥革命把皇帝赶跑，这不是胜利了吗?说它失败，是说辛亥革命只把一个皇帝赶跑。”毛泽东这里所说的“只把一个皇帝赶跑”是指 ( )": {
+    "选项": "A. 反帝反封建的革命任务没有完成\nB. 没有推翻帝制\nC. 孙中山没有继续革命\nD. 袁世凯窃取了胜利果实",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 共产党独立领导革命战争、创建人民军队和武装夺取政权的开端是 ( )": {
+    "选项": "A. 南昌起义\nB. 广州起义\nC. 武昌起义\nD. 秋收起义",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 大革命失败后，中国共产党开始了武装反抗国民党反动统治的斗争。然而，一系列起义却接连失败，从中得出的最深刻教训是 ( )": {
+    "选项": "A. 必须走适合中国国情的革命道路\nB. 必须建立新型人民军队\nC. 必须武装反抗国民党反动统治\nD. 必须建立党对军队的绝对领导",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 太平天国颁布的《天朝田亩制度》的核心内容是 ( )": {
+    "选项": "A. 平均分配土地\nB. 发展资本主义工商业\nC. 推行科举制度\nD. 建立君主立宪制",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 中国梦的本质是 ( )": {
+    "选项": "A. 国家富强、军队强盛、人民幸福\nB. 国家富强、民族振兴、军队强盛\nC. 国家富强、民族振兴、人民幸福\nD. 国家富强、人民幸福、文化发展",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 中国特色社会主义道路、理论、制度、文化不断发展，拓展了发展中国家走向现代化的途径，为解决人类问题贡献了中国智慧和 ( )": {
+    "选项": "A. 中国文化\nB. 中国思想\nC. 中国价值\nD. 中国方案",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 1920年8月《共产党宣言》中文全译本公开出版，翻译者是 ( )": {
+    "选项": "A. 李大钊\nB. 李汉俊\nC. 陈独秀\nD. 陈望道",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 科学发展观的核心是 ( )": {
+    "选项": "A. 统筹兼顾\nB. 和谐发展\nC. 以人为本\nD. 可持续发展",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 开启中国共产党独立自主解决中国革命实际问题的新阶段的会议是( )": {
+    "选项": "A. 党的六届六中全会\nB. 瓦窑堡会议\nC. 遵义会议\nD. 八七会议",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 毛泽东在谈到辛亥革命时指出辛亥革命有它胜利的地方，也有它失败的地方。“辛亥革命把皇帝赶跑，这不是胜利了吗?说它失败，是说辛亥革命只把一个皇帝赶跑。”这里所说的“只把一个皇帝赶跑”是指 ( )": {
+    "选项": "A. 袁世凯窃取了胜利果实\nB. 反帝反封建的革命任务没有完成\nC. 孙中山没有继续革命\nD. 没有推翻帝制",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 第一次国共合作正式形成的标志是 ( )": {
+    "选项": "A. 中共三大的召开\nB. 国民党一大的召开\nC. 黄埔军校的建立\nD. 广东国民政府的成立",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 抗日战争进入相持阶段的标志是 ( )": {
+    "选项": "A. 国民政府迁都重庆\nB. 汪精卫建立伪政权\nC. 徐州会战结束\nD. 日军占领广州、武汉",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) “一国两制”为世界上仍在分裂中的民族和国家实现和平统一,为用和平方式解决国际争端提供了新的思路和经验。实现两岸和平统一的基础是( )": {
+    "选项": "A. 坚持一个中国的原则\nB. 促进两岸关系良性互动\nC. 发展两岸经贸关系\nD. 实现两岸三通",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 新三民主义成为第一次国共合作的政治基础，这是因为新三民主义的政纲\n( )": {
+    "选项": "A. 体现了联俄、联共、扶助农工三大革命政策\nB. 把斗争的矛头直接指向北洋军阀\nC. 同中国共产党在民主革命阶段的纲领基本一致\nD. 把民生主义概括为“平均地权”",
+    "正确答案": "C"
+  },
+  "(多选题, 2.0 分) 在党的七届二中全会上，毛泽东提出了“两个务必”的思想，指的是( )": {
+    "选项": "A. 务必保持中国共产党在国家政权中的领导地位\nB. 务必坚持走社会主义道路\nC. 务必使同志们继续地保持艰苦奋斗的作风\nD. 务必使同志们继续地保持谦虚、谨慎、不骄、不躁的作风",
+    "正确答案": "CD"
+  },
+  "(多选题, 2.0 分) 洋务派兴办的洋务事业主要有 ( )": {
+    "选项": "A. 兴办近代企业\nB. 建立新式海陆军\nC. 创办新式学堂、派遣留学生\nD. 废除八股",
+    "正确答案": "ABC"
+  },
+  "(多选题, 2.0 分) 鸦片战争以后，先进的中国人开始睁眼看世界了;中日甲午战争以后，中国人民的民族意识开始普遍觉醒，近代中国民族意识觉醒的表现有( )": {
+    "选项": "A. 郑观应与西方“商战”的主张\nB. 魏源“师夷长技以制夷”\nC. 孙中山喊出了“振兴中华”的时代最强音\nD. 慈禧“量中华之物力，结与国之欢心”",
+    "正确答案": "ABC"
+  },
+  "(多选题, 2.0 分) 1931年，中国共产党在总结土地革命经验的基础上，制定了土地革命中的阶级路线，即 ( )": {
+    "选项": "A. 联合中农\nB. 限制富农\nC. 保护中小工商业者，消灭地主阶级\nD. 依靠贫农、雇农",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 洋务运动失败的原因主要是 ( )": {
+    "选项": "A. 洋务运动具有腐朽性\nB. 洋务运动具有依赖性\nC. 洋务运动具有封建性\nD. 洋务运动具有落后性",
+    "正确答案": "ABC"
+  },
+  "(多选题, 2.0 分) 1948年9月到1949年1月，人民解放军同国民党军队进行战略决战的战役是 ( )": {
+    "选项": "A. 平津战役\nB. 渡江战役\nC. 淮海战役\nD. 辽沈战役",
+    "正确答案": "ACD"
+  },
+  "(多选题, 2.0 分) 中国共产党在过渡时期的总路线是 ( )": {
+    "选项": "A. 逐步实现对手工业的社会主义改造\nB. 逐步实现对农业的社会主义改造\nC. 逐步实现对资本主义工商业的社会主义改造\nD. 逐步实现国家的社会主义工业化",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 新时代中国共产党的历史使命可概括为 ( )": {
+    "选项": "A. 伟大梦想\nB. 伟大事业\nC. 伟大斗争\nD. 伟大工程",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 辛亥革命的历史意义是 ( )": {
+    "选项": "A. 推翻了封建势力的政治代表、帝国主义在中国的代理人清王朝的统治\nB. 结束了统治中国两千多年的封建君主专制制度\nC. 推动了中国人民的思想解放\nD. 促使社会经济、思想习惯和社会风俗等方面发生了新的积极变化",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 1935年1月中共中央政治局在长征途中召开的遵义会议，是党的历史上一个生死攸关的转折点。这次会议 ( )": {
+    "选项": "A. 结束了“左”倾教条主义错误在中央的统治\nB. 全面讨论了政治路线的是非问题\nC. 开始确立毛泽东在中共中央和红军的领导地位\nD. 解决了当时党内所面临的最迫切的组织问题和军事问题",
+    "正确答案": "ACD"
+  },
+  "(判断题, 1.0 分) 党的十一届三中确立了解放思想、实事求是的思想路线。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 抗日战争取得胜利的重要法宝是中国共产党的中流砥柱作用。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 《资政新篇》是太平天国后期提出的具有资本主义色彩的改革方案。( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 日本发动全面侵华战争是从华北事变开始的。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 华北事变后，抗日战争进入全民族抗战阶段。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 抗日战争期间，中国共产党领导的游击战争不具有战略地位。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 1950年，率领中国人民志愿军赴朝鲜，与朝鲜人民并肩反击美国侵略的司令员是彭德怀。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 长征一结束，中国革命的新局面就开始了。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 抗日民族统一战线建立的标志是 ( )": {
+    "选项": "A. 国民政府发表自卫宣言\nB. 国民党公布国共合作宣言\nC. 八路军和新四军的建立\nD. 西安事变的和平解决",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 1947年6月底，揭开人民解放战争战略进攻序幕的是 ( )": {
+    "选项": "A. 东北野战军发起辽沈战役\nB. 晋冀鲁豫野战军千里跃进大别山\nC. 西北野战军粉碎敌人的重点进攻\nD. 晋察冀野战军攻占石家庄",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 抗战胜利后，经过重庆谈判国共双方为确认和平建国的基本方针而达成的协议是 ( )": {
+    "选项": "A. 《对目前时局的宣言》\nB. 《共同纲领》\nC. 《政府与中共代表会谈纪要》\nD. 《抗战胜利后的时局和我们的方针》",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 近代中国派遣第一批官派留学生是在 ( )": {
+    "选项": "A. 辛亥革命时期\nB. 戊戌维新时期\nC. 清末“新政”时期\nD. 洋务运动时期",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 中国进入社会主义社会最主要的标志是 ( )": {
+    "选项": "A. “五四宪法”的颁布\nB. 社会主义经济制度的建立\nC. 过渡时期总路线的提出\nD. 中华人民共和国的成立",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 开启了中国共产党独立自主解决中国革命实际问题的新阶段的会议是\n( )": {
+    "选项": "A. 八七会议\nB. 瓦窑堡会议\nC. 南昌起义\nD. 遵义会议",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 实现中华民族伟大复兴的必由之路是 ( )": {
+    "选项": "A. 贯彻新发展理念\nB. 团结奋斗\nC. 全面从严治党\nD. 中国特色社会主义",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 标志着近代以来中华民族面临的争取民族独立、人民解放这个历史任务基本完成的事件是 ( )": {
+    "选项": "A. 新中国的成立\nB. 党的七届二中全会的召开\nC. 内战的爆发\nD. 人民政协的召开",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 20世纪中国的第一次历史性巨变是 ( )": {
+    "选项": "A. 辛亥革命\nB. 义和团运动\nC. 戊戌变法\nD. 太平天国农民战争",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 北洋军阀是袁世凯建立起来的反动政权，它代表 ( )": {
+    "选项": "A. 军阀集团的利益\nB. 大地主和买办资产阶级的利益\nC. 资产阶级的利益\nD. 地主阶级的利益",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 标志中国进入改革开放和社会主义现代化建设新时期的重要会议 ( )": {
+    "选项": "A. 中共十三届三中全会\nB. 中共十一届三中全会\nC. 中共十二届三中全会\nD. 中共十四届三中全会",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 南京大屠杀纪念馆的建立与下列哪一历史事件有关 ( )": {
+    "选项": "A. 解放战争\nB. 鸦片战争\nC. 抗日战争\nD. 甲午战争",
+    "正确答案": "C"
+  },
+  "(多选题, 2.0 分) 党的十九届六中全会审议通过的《中共中央关于党的百年奋斗重大成就和\n历史经验的决议》，在全面回顾总结党的百年奋斗历程和重大成就基础上，\n以更宏阔的视角，总结党的百年奋斗的历史意义，指出党的百年奋斗( )": {
+    "选项": "A. 开辟了实现中华民族伟大复兴的正确道路\nB. 深刻影响了世界历史进程\nC. 从根本上改变了中国人民的前途命运\nD. 展示了马克思主义的强大生命力",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 近代中国的社会主要矛盾是 ( )": {
+    "选项": "A. 帝国主义和中华民族的矛盾\nB. 封建主义和人民大众的矛盾\nC. 资产阶级与无产阶级的矛盾\nD. 农民阶级和地主阶级的矛盾",
+    "正确答案": "AB"
+  },
+  "(多选题, 2.0 分) 近代中国人民所面临的两大历史任务是 ( )": {
+    "选项": "A. 推翻清王朝的统治\nB. 反抗帝国主义的侵略\nC. 争取民族独立和人民解放\nD. 实现国家富强和人民幸福",
+    "正确答案": "CD"
+  },
+  "(多选题, 2.0 分) 党的七大把党在长期奋斗中形成的优良作风概括为 ( )": {
+    "选项": "A. 理论和实践相结合\nB. 和人民群众紧密联系在一起的作风\nC. 自我批评的作风\nD. 艰苦奋斗的作风",
+    "正确答案": "ABC"
+  },
+  "(判断题, 1.0 分) 遵义会议是党的历史上一个生死攸关的转折点。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国新民主主义革命的伟大开端是五四运动。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 1945年8月，中共中央在《对目前时局的宣言》中明确提出独立、自由、和平的口号。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 太平天国运动是中国农民战争的最高峰。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 义和团运动是中国近代史上中国人民第一次大规模的反侵略武装斗争。\n( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 国民党政府实行专制独裁统治，官员们贪污腐化，在抗战后期就严重丧失民心。抗战胜利之际，国民党政府所派官员“劫收”沦陷区，进一步丧失人心。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 新文化运动的基本口号是 ( )": {
+    "选项": "A. 民主和自由\nB. 自由和平等\nC. 平等和博爱\nD. 民主和科学",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 1903年在《驳康有为论革命书》中歌颂革命为“启迪民智，除旧布新”良药的是 ( )": {
+    "选项": "A. 严复\nB. 陈天华\nC. 章太炎\nD. 邹容",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 洋务派代表人物中，不属于地方督抚的是 ( )": {
+    "选项": "A. 左宗棠\nB. 曾国藩\nC. 奕䜣\nD. 李鸿章",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 解放战争时期，为了打退国民党对解放区的军事进攻，中共中央指出，在政治上，必须和人民群众亲密合作。内战爆发后，为了争取一切可以争取的人，在党的领导下，建立最广泛的 ( )": {
+    "选项": "A. 人民民主统一战线\nB. 工农民主统一战线\nC. 国民革命统一战线\nD. 抗日民族统一战线",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 强迫清政府把台湾割让给日本的不平等条约是 ( )": {
+    "选项": "A. 《北京条约》\nB. 《马关条约》\nC. 《辛丑条约》\nD. 《南京条约》",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 中国特色社会主义最本质的特征和中国特色社会主义制度的最大优势是\n( )": {
+    "选项": "A. 中国共产党领导的多党合作和政治协商制度\nB. 建设中国特色社会主义法治体系\nC. 中国共产党的领导\nD. 人民代表大会制度",
+    "正确答案": "C"
+  },
+  "(多选题, 2.0 分) 标志着中国共产党进入创造红军的新时期的起义有 ( )": {
+    "选项": "A. 百色起义\nB. 南昌起义\nC. 秋收起义\nD. 广州起义",
+    "正确答案": "BCD"
+  },
+  "(多选题, 2.0 分) 1992年初，在关乎中国改革开放和社会主义现代化建设前途命运的关键时刻，邓小平在视察武昌、深圳、珠海、上海等地时，发表了重要讲话。谈话的主要内容有 ( )": {
+    "选项": "A. 革命是解放生产力，改革也是解放生产力\nB. 计划多一点还是市场多一点，不是社会主义与资本主义的本质区别\nC. 不坚持社会主义，不改革开放，不发展经济，不改善人民生活，只能是\n死路一条\nD. 走社会主义道路，就是要逐步实现共同富裕",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 毛泽东在《反对本本主义》一文中提出和阐述的重要的思想有 ( )": {
+    "选项": "A. 中国革命斗争的胜利要靠中国同志了解中国情况\nB. 不做正确的调查同样没有发言权\nC. 没有调查，没有发言权\nD. 关心群众生活，注意工作方法",
+    "正确答案": "AC"
+  },
+  "(多选题, 2.0 分) 有人形象地说南京既是中国近代史的起点，也是中国近代史的终点。下列能够反映这种说法的两个历史片断是 ( )": {
+    "选项": "A. 1842年8月29日，英国侵略者强迫清政府在南京江面的英舰上签订中国近代史上第一个不平等条约《南京条约》\nB. 1949年4月23日，人民解放军占领南京，宣告延续了22年之久的国民党反动统治的覆灭\nC. 洪秀全在南京颁布《天朝田亩制度》\nD. 孙中山在南京主持中华民国临时政府第一次国务会议",
+    "正确答案": "AB"
+  },
+  "(多选题, 2.0 分) 2001年7月1日，江泽民在庆祝中国共产党成立80周年大会上的讲话中,指出“三个代表”重要思想的核心观点包括，中国共产党 ( )": {
+    "选项": "A. 始终代表中国先进生产力的发展要求\nB. 始终代表中国先进文化的前进方向\nC. 始终代表中国最广大人民的根本利益\nD. 始终代表中国共产党根本利益",
+    "正确答案": "ABC"
+  },
+  "(判断题, 1.0 分) 中国工人运动第一次高潮的起点是京汉铁路工人罢工。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 新民主主义社会不是一种独立的社会形态，它具有过渡形态，是逐步过渡到社会主义社会的过渡性质的社会。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国革命的胜利发展，从根本上说，是由于有了中国共产党的领导。____": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国梦的本质是国家富强、民族振兴、人民幸福。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 1946年6月，国民党撕毁政协协议，悍然发动全面内战，国民党军队首先进攻的是 ( )": {
+    "选项": "A. ­中原解放区\nB. 陕甘宁解放区\nC. ­山东解放区\nD. 东北解放区",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 提出了“物竞天择”“适者生存”的社会进化论思想的著作是 ( )": {
+    "选项": "A. 《变法通议》\nB. 《仁学》\nC. 《俄彼得变政记》\nD. 《天演论》",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 民主革命时期，国共两党两次合作的共同点是 ( )": {
+    "选项": "A. 倡导力量相同\nB. 政治基础相同\nC. 主要任务相同\nD. 合作方式相同",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 下列属于民权主义内容的是 ( )": {
+    "选项": "A. 追求民族独立，建立中华民族“独立的国家”\nB. 核定全国土地的地价，其现有之地价，仍属原主;革命后的增价，则归国家，为国民共享\nC. 以革命手段推翻清朝政府，改变它一贯推行的民族歧视和民族压迫政策\nD. 推翻封建君主专制制度，建立资产阶级民主共和国",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 党对军队绝对领导的根本原则和制度，定型于 ( )": {
+    "选项": "A. 南昌起义\nB. 古田会议\nC. 八七会议\nD. 三湾改编",
+    "正确答案": "B"
+  },
+  "(多选题, 2.0 分) 抗日战争期间，中国共产党领导的抗日武装力量主要有 ( )": {
+    "选项": "A. 新四军\nB. 工农红军\nC. 国民革命军\nD. 八路军",
+    "正确答案": "AD"
+  },
+  "(判断题, 1.0 分) 全面建成小康社会，是迈向中华民族伟大复兴的关键一步。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 在中国大地上率先举起马克思主义旗帜的是李大钊。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 中国近代史上提出“师夷长技以制夷”主张的人物是林则徐。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(单选题, 1.0 分) 标志着党和国家在指导思想上拨乱反正胜利完成的会议是 ( )": {
+    "选项": "A. 党的十一届三中全会\nB. 党的十一届六中全会\nC. 党的十一大\nD. 党的十二大",
+    "正确答案": "B"
+  },
+  "(单选题, 1.0 分) 在大革命失败的危急关头，中共八七会议确定的方针是 ( )": {
+    "选项": "A. 土地革命和武装起义\nB. 开辟农村革命根据地\nC. 推翻北洋军阀黑暗统治\nD. 建立工农民主统一战线",
+    "正确答案": "A"
+  },
+  "(单选题, 1.0 分) 20世纪40年代前期，中国共产党在全党范围内开展了一场整风运动。这场整风运动最主要的任务是 ( )": {
+    "选项": "A. 反对享乐主义以整顿作风\nB. 反对宗派主义以整顿党风\nC. 反对党八股以整顿文风\nD. 反对主观主义以整顿学风",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 近代中国社会的最主要矛盾是 ( )": {
+    "选项": "A. 封建主义和人民大众的矛盾\nB. 资产阶级和无产阶级的矛盾\nC. 帝国主义和中华民族的矛盾\nD. 地主阶级和农民阶级的矛盾",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 帝国主义列强始终不能灭亡和瓜分中国根本原因是 ( )": {
+    "选项": "A. 中国资产阶级开始登上历史舞台\nB. 中华民族进行的不屈不挠的反侵略斗争\nC. 帝国主义列强之间的矛盾\nD. 晚清政府的军事抵抗",
+    "正确答案": "B"
+  },
+  "(多选题, 2.0 分) 洋务派创办的近代海军包括 ( )": {
+    "选项": "A. 广东水师\nB. 福建水师\nC. 南洋水师\nD. 北洋水师",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 毛泽东提出处理中国共产党与民主党派的关系，应坚持的方针为 ( )": {
+    "选项": "A. 长期共存\nB. 荣辱与共\nC. 互相监督\nD. 肝胆相照",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 大革命失败的原因是 ( )": {
+    "选项": "A. 反革命力量强大，蒋介石集团、汪精卫集团先后叛变革命\nB. 党当时处幼年时期，不善将马列主义基本原理同中国革命具体实际结合\nC. 党的中央领导机关在大革命后期犯了以陈独秀为代表右倾机会主义错误\nD. 共产国际对中国革命作出了一些错误的指导",
+    "正确答案": "ABCD"
+  },
+  "(判断题, 1.0 分) 洋务派兴办洋务事业的指导思想是师夷长技以制夷。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(单选题, 1.0 分) 在土地革命战争后期和抗日战争时期，毛泽东思想得到多方面展开而趋于成熟，其标志是 ( )": {
+    "选项": "A. 思想政治工作和文化工作理论的系统提出\nB. 人民民主专政理论的完整论述\nC. 农村包围城市、武装夺取政权理论的科学概括\nD. 新民主主义理论的系统阐述",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 1920年8月《共产党宣言》中文全译本公开出版，它的翻译者是 ( )": {
+    "选项": "A. 陈独秀\nB. 李大钊\nC. 李汉俊\nD. 陈望道",
+    "正确答案": "D"
+  },
+  "(多选题, 2.0 分) 新文化运动的历史意义主要表现为 ( )": {
+    "选项": "A. 为马克思主义在中国的传播创造了有利条件\nB. 在社会上掀起了一股思想解放的潮流\nC. 是中国历史上一次前所未有的启蒙运动\nD. 彻底否定孔学的历史作用",
+    "正确答案": "ABC"
+  },
+  "(判断题, 1.0 分) 全面建成小康社会，是迈向中华民族伟大复兴的关键一步。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(判断题, 1.0 分) 长征的胜利，是中国革命转危为安的关键。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 促使中国人民的民族意识开始普遍觉醒的重大事件是 ( )": {
+    "选项": "A. 日本全面侵华战争\nB. 八国联军侵华战争\nC. 中日甲午战争\nD. 中法战争",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 洋务运动的指导思想是 ( )": {
+    "选项": "A. “自强”“求富”\nB. “师夷长技以制夷”\nC. “中学为体，西学为用”\nD. “振兴中华”",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 近代中国的历史表明，要争得民族独立和人民解放，必须首先 ( )": {
+    "选项": "A. 进行反帝反封建的民主革命\nB. 改变经济技术落后的面貌\nC. 废除封建地主土地所有制\nD. 发展教育提高国民素质",
+    "正确答案": "A"
+  },
+  "(判断题, 1.0 分) 辛亥革命结束了中国半殖民地半封建社会的状况。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(判断题, 1.0 分) 遵义会议集中解决了当时具有决定意义的军事和组织问题。": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "对"
+  },
+  "(单选题, 1.0 分) 1945年8月，中共中央在《对目前时局的宣言》中明确提出的口号是( )": {
+    "选项": "A. 打倒蒋介石，解放全中国\nB. 独立、自由、和平\nC. 巩固国内和平，实现民主改革\nD. 和平、民主、团结",
+    "正确答案": "D"
+  },
+  "(单选题, 1.0 分) 抗日战争进入相持阶段后，日本对国民党政府采取的方针是 ( )": {
+    "选项": "A. 以华制华，以战养战\nB. 速战速决\nC. 以政治诱降为主、军事打击为辅\nD. “三光”政策",
+    "正确答案": "C"
+  },
+  "(单选题, 1.0 分) 鸦片战争前,中国社会经济中占统治地位的是 ( )": {
+    "选项": "A. 半殖民地经济\nB. 商品经济\nC. 资本主义经济\nD. 自然经济",
+    "正确答案": "D"
+  },
+  "(多选题, 2.0 分) 1938年5月至6月间，毛泽东在《论持久战》中论述的中日两国敌我矛盾特点包括 ( )": {
+    "选项": "A. 敌小国我大国\nB. 敌寡助我多助\nC. 敌退步我进步\nD. 敌强我弱",
+    "正确答案": "ABCD"
+  },
+  "(多选题, 2.0 分) 资产阶级革命派的骨干力量是 ( )": {
+    "选项": "A. 工农阶级\nB. 资产阶级知识分子\nC. 地主阶级\nD. 小资产阶级知识分子",
+    "正确答案": "BD"
+  },
+  "(判断题, 1.0 分) 近代中国人民反侵略战争屡遭失败的最重要的原因是经济技术的落后。( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(单选题, 1.0 分) 我国在社会主义改造中对资本主义工商业采取的政策是 ( )": {
+    "选项": "A. 国家资本主义\nB. 没收\nC. 保护\nD. 和平赎买(利用、限制、改造)",
+    "正确答案": "D"
+  },
+  "(多选题, 2.0 分) 中国新民主主义革命胜利的主要原因是 ( )": {
+    "选项": "A. 广大人民群众的广泛参加和大力支持\nB. 反革命势力的分化瓦解\nC. 国际无产阶级和人民群众的支持\nD. 中国共产党的正确领导",
+    "正确答案": "ACD"
+  },
+  "(判断题, 1.0 分) 标志着解放区在农民土地问题上,开始由削弱封建剥削,向变革封建土地关系、废除封建剥削制度过渡的文件是《中国土地法大纲》。 ( )": {
+    "选项": "A. 对\nB. 错",
+    "正确答案": "错"
+  },
+  "(多选题, 2.0 分) 新中国成立初期捍卫巩固新政权的斗争包括 ( )": {
+    "选项": "A. 组织同投机资本作斗争的“银元之战”和“米棉之战”\nB. 抗美援朝，保家卫国\nC. 废除帝国主义国家依据不平等条约在中国享有一切特权\nD. 进行废除封建土地制度的改革",
+    "正确答案": "ABCD"
+  }
+};
+        
+        // 应用状态
+        let currentMode = 'sequential'; // 'sequential' 或 'random'
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let answeredCorrectly = false;
+        let shuffledQuestions = [];
+        let currentQuestionType = 'single'; // 'single' 或 'multiple'
+        let userSelection = [];
+        
+        // DOM 元素
+        const sequentialModeBtn = document.getElementById('sequentialMode');
+        const randomModeBtn = document.getElementById('randomMode');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedback = document.getElementById('feedback');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progress = document.getElementById('progress');
+        const result = document.getElementById('result');
+        const multiselectHint = document.getElementById('multiselectHint');
+        const questionTypeEl = document.querySelector('.question-type');
+        const questionScoreEl = document.querySelector('.question-score');
+        
+        // 初始化应用
+        function init() {
+            // 设置模式按钮事件
+            sequentialModeBtn.addEventListener('click', () => setMode('sequential'));
+            randomModeBtn.addEventListener('click', () => setMode('random'));
+            
+            // 设置控制按钮事件
+            submitBtn.addEventListener('click', submitAnswer);
+            resetBtn.addEventListener('click', resetQuiz);
+            
+            // 初始化问题列表
+            questions = Object.keys(quizData);
+            
+            // 默认使用顺序模式
+            setMode('sequential');
+        }
+        
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // 更新按钮状态
+            sequentialModeBtn.classList.toggle('active', mode === 'sequential');
+            randomModeBtn.classList.toggle('active', mode === 'random');
+            
+            // 重置测验
+            resetQuiz();
+        }
+        
+        // 重置测验
+        function resetQuiz() {
+            if (currentMode === 'random') {
+                // 随机模式：打乱问题顺序
+                shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+            } else {
+                // 顺序模式：保持原始顺序
+                shuffledQuestions = [...questions];
+            }
+            
+            currentQuestionIndex = 0;
+            answeredCorrectly = false;
+            userSelection = [];
+            result.classList.remove('show');
+            displayQuestion();
+        }
+        
+        // 显示当前问题
+        function displayQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                // 所有问题已完成
+                result.classList.add('show');
+                submitBtn.style.display = 'none';
+                return;
+            }
+            
+            result.classList.remove('show');
+            submitBtn.style.display = 'inline-block';
+            
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const questionData = quizData[currentQuestion];
+            
+            // 显示问题文本
+            questionText.textContent = extractQuestionText(currentQuestion);
+            
+            // 更新问题类型和分数
+            const typeMatch = currentQuestion.match(/\(([^,]+),\s*([^)]+)分\)/);
+            const type = typeMatch ? typeMatch[1] : "未知";
+            const score = typeMatch ? typeMatch[2] : "0";
+            
+            questionTypeEl.textContent = type;
+            questionScoreEl.textContent = `${score} 分`;
+            
+            // 判断是单选题还是多选题
+            currentQuestionType = type.includes('多选') ? 'multiple' : 'single';
+            multiselectHint.style.display = currentQuestionType === 'multiple' ? 'block' : 'none';
+            
+            // 显示选项
+            const options = questionData.选项.split('\n');
+            optionsContainer.innerHTML = '';
+            userSelection = [];
+            
+            options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.dataset.option = option.charAt(0);
+                
+                const letter = document.createElement('span');
+                letter.className = 'option-letter';
+                letter.textContent = option.charAt(0);
+                
+                const text = document.createElement('span');
+                text.textContent = option.substring(3); // 移除选项字母和点
+                
+                // 为多选题添加复选框
+                if (currentQuestionType === 'multiple') {
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'checkbox';
+                    optionElement.appendChild(checkbox);
+                }
+                
+                optionElement.appendChild(letter);
+                optionElement.appendChild(text);
+                
+                if (currentQuestionType === 'single') {
+                    optionElement.addEventListener('click', () => selectSingleOption(optionElement));
+                } else {
+                    optionElement.addEventListener('click', () => toggleMultiOption(optionElement));
+                }
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // 重置反馈
+            feedback.className = 'feedback';
+            feedback.textContent = '';
+            submitBtn.disabled = true;
+            
+            // 更新进度
+            progress.textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${shuffledQuestions.length} 题`;
+        }
+        
+        // 提取问题文本（移除题目前缀）
+        function extractQuestionText(fullQuestion) {
+            return fullQuestion.replace(/^\([^)]+\)\s*/, "");
+        }
+        
+        // 单选题选择
+        function selectSingleOption(selectedOption) {
+            // 如果已经回答正确，不允许再次选择
+            if (answeredCorrectly) return;
+            
+            // 清除之前的选中状态
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // 标记当前选中
+            selectedOption.classList.add('selected');
+            userSelection = [selectedOption.dataset.option];
+            
+            // 启用提交按钮
+            submitBtn.disabled = false;
+        }
+        
+        // 多选题选择
+        function toggleMultiOption(selectedOption) {
+            // 如果已经回答正确，不允许再次选择
+            if (answeredCorrectly) return;
+            
+            const optionValue = selectedOption.dataset.option;
+            
+            // 切换选中状态
+            if (selectedOption.classList.contains('selected')) {
+                selectedOption.classList.remove('selected');
+                userSelection = userSelection.filter(opt => opt !== optionValue);
+            } else {
+                selectedOption.classList.add('selected');
+                userSelection.push(optionValue);
+            }
+            
+            // 启用提交按钮（至少选择一个选项）
+            submitBtn.disabled = userSelection.length === 0;
+        }
+        
+        // 提交答案
+        function submitAnswer() {
+            if (answeredCorrectly || userSelection.length === 0) return;
+            
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const correctAnswer = quizData[currentQuestion]['正确答案'];
+            const isMultiSelect = currentQuestionType === 'multiple';
+            
+            // 清除之前的反馈状态
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+            });
+            
+            let isCorrect = false;
+            
+            if (isMultiSelect) {
+                // 多选题处理
+                const correctOptions = correctAnswer.replace('正确答案:', '').split('');
+                
+                // 检查是否完全匹配（忽略顺序）
+                const sortedUserSelection = [...userSelection].sort();
+                const sortedCorrectOptions = [...correctOptions].sort();
+                isCorrect = JSON.stringify(sortedUserSelection) === JSON.stringify(sortedCorrectOptions);
+                
+                // 标记所有选项的状态
+                correctOptions.forEach(opt => {
+                    const optionEl = document.querySelector(`.option[data-option="${opt}"]`);
+                    if (optionEl) {
+                        if (userSelection.includes(opt)) {
+                            optionEl.classList.add('correct');
+                        } else {
+                            optionEl.classList.add('correct');
+                        }
+                    }
+                });
+                
+                // 标记用户选择但不正确的选项
+                userSelection.forEach(opt => {
+                    if (!correctOptions.includes(opt)) {
+                        const optionEl = document.querySelector(`.option[data-option="${opt}"]`);
+                        if (optionEl) optionEl.classList.add('incorrect');
+                    }
+                });
+            } else {
+                // 单选题处理
+                const correctOption = correctAnswer.replace('正确答案:', '');
+	
+                isCorrect = userSelection[0] === correctOption;
+                			if(correctOption.includes("错") || correctOption.includes("对"))
+				{
+					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
+					isCorrect = userSelection.includes(correctOption)
+				}
+                // 标记用户选择的选项
+                const selectedOption = document.querySelector(`.option[data-option="${userSelection[0]}"]`);
+                if (selectedOption) {
+                    if (isCorrect) {
+                        selectedOption.classList.add('correct');
+                    } else {
+                        selectedOption.classList.add('incorrect');
+                    }
+                }
+                
+                // 标记正确答案（如果用户没选对）
+                if (!isCorrect) {
+                    const correctOptionEl = document.querySelector(`.option[data-option="${correctOption}"]`);
+                    if (correctOptionEl) correctOptionEl.classList.add('correct');
+                }
+            }
+            
+            // 显示反馈
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = '回答正确！';
+                answeredCorrectly = true;
+                submitBtn.disabled = true;
+			   if (answeredCorrectly) {
+					currentQuestionIndex++;
+					answeredCorrectly = false;
+					userSelection = [];
+					displayQuestion();
+				}
+            } else {
+                feedback.className = 'feedback incorrect';
+                if (isMultiSelect) {
+                    const correctOptions = correctAnswer.replace('正确答案:', '');
+                    feedback.textContent = `回答错误！正确答案: ${correctOptions}`;
+                } else {
+                    const correctOption = correctAnswer.replace('正确答案:', '');
+                    feedback.textContent = `回答错误！正确答案是: ${correctOption}`;
+                }
+            }
+        }
+        // 初始化应用
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
