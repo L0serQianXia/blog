@@ -1375,13 +1375,13 @@
                 // 单选题处理
                 const correctOption = correctAnswer.replace('正确答案:', '');
                 isCorrect = userSelection[0] === correctOption;
-            }
-                      				isCorrect = userSelection[0] === correctOption;
 				if(correctOption.includes("错") || correctOption.includes("对"))
 				{
 					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
 					isCorrect = userSelection.includes(correctOption)
 				}
+            }
+
             // 标记选项状态
             markOptions(isCorrect, correctAnswer, isMultiSelect);
             
