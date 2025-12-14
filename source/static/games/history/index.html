@@ -1366,7 +1366,7 @@
             if (isMultiSelect) {
                 // 多选题处理
                 const correctOptions = correctAnswer.replace('正确答案:', '').split('');
-                
+      
                 // 检查是否完全匹配（忽略顺序）
                 const sortedUserSelection = [...userSelection].sort();
                 const sortedCorrectOptions = [...correctOptions].sort();
@@ -1376,7 +1376,12 @@
                 const correctOption = correctAnswer.replace('正确答案:', '');
                 isCorrect = userSelection[0] === correctOption;
             }
-            
+                      				isCorrect = userSelection[0] === correctOption;
+				if(correctOption.includes("错") || correctOption.includes("对"))
+				{
+					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
+					isCorrect = userSelection.includes(correctOption)
+				}
             // 标记选项状态
             markOptions(isCorrect, correctAnswer, isMultiSelect);
             
@@ -1431,12 +1436,7 @@
                 });
             } else {
                 const correctOption = correctAnswer.replace('正确答案:', '');
-                            isCorrect = userSelection[0] === correctOption;
-                			if(correctOption.includes("错") || correctOption.includes("对"))
-				{
-					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
-					isCorrect = userSelection.includes(correctOption)
-				}
+
                 // 标记用户选择的选项
                 const selectedOption = document.querySelector(`.option[data-option="${userSelection[0]}"]`);
                 if (selectedOption) {
