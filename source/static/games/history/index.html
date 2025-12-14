@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>历史知识测验系统 - 支持多选题</title>
+    <title>历史知识测验系统 - 错题本功能</title>
     <style>
         * {
             margin: 0;
@@ -38,20 +38,52 @@
             font-weight: 700;
         }
         
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            background: #e0e0e0;
+            color: #7f8c8d;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .mode-selector {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .mode-btn {
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
             border-radius: 50px;
             background: linear-gradient(to right, #3498db, #2980b9);
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -59,7 +91,7 @@
         }
         
         .mode-btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         
@@ -68,7 +100,7 @@
         }
         
         .question-container {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             padding: 20px;
             background-color: #f8f9fa;
             border-radius: 10px;
@@ -141,7 +173,6 @@
             font-weight: bold;
         }
         
-        /* 多选题的复选框样式 */
         .checkbox {
             position: absolute;
             right: 15px;
@@ -160,7 +191,7 @@
             display: none;
             width: 8px;
             height: 14px;
-            border: solid white;
+            border: solid red;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
@@ -225,15 +256,23 @@
             box-shadow: none;
         }
         
-        .reset-btn {
+        .reset-btn, .retry-btn {
             background: linear-gradient(to right, #95a5a6, #7f8c8d);
             color: white;
             box-shadow: 0 4px 8px rgba(155, 175, 180, 0.3);
         }
         
-        .reset-btn:hover {
+        .reset-btn:hover, .retry-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(155, 175, 180, 0.4);
+        }
+        
+        .retry-btn {
+            background: linear-gradient(to right, #e67e22, #d35400);
+        }
+        
+        .retry-btn:hover {
+            box-shadow: 0 6px 12px rgba(230, 126, 34, 0.4);
         }
         
         .progress {
@@ -266,6 +305,14 @@
             margin: 10px 0;
         }
         
+        .result-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f1f2f6;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
         .multiselect-hint {
             text-align: center;
             color: #7f8c8d;
@@ -274,9 +321,77 @@
             font-style: italic;
         }
         
+        /* 错题本样式 */
+        .mistakes-container {
+            margin-top: 20px;
+        }
+        
+        .mistakes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .mistakes-title {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+        
+        .mistakes-count {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .mistake-item {
+            background: #fdf2f2;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .mistake-question {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #c0392b;
+        }
+        
+        .mistake-correct {
+            color: #27ae60;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .mistake-user {
+            color: #e74c3c;
+            margin-top: 5px;
+        }
+        
+        .empty-mistakes {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 30px;
+            font-style: italic;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 120px;
             }
             
             .mode-selector {
@@ -287,6 +402,7 @@
             .mode-btn {
                 width: 100%;
                 max-width: 300px;
+                margin-bottom: 10px;
             }
             
             .question-text {
@@ -300,6 +416,16 @@
             .checkbox {
                 right: 10px;
             }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
         }
     </style>
 </head>
@@ -307,40 +433,70 @@
     <div class="container">
         <h1>历史知识测验系统</h1>
         
-        <div class="mode-selector">
-            <button class="mode-btn" id="sequentialMode">顺序做题模式</button>
-            <button class="mode-btn" id="randomMode">随机做题模式</button>
+        <!-- 选项卡 -->
+        <div class="tabs">
+            <button class="tab-btn active" id="quizTab">测验</button>
+            <button class="tab-btn" id="mistakesTab">错题本</button>
         </div>
         
-        <div class="question-container">
-            <div class="question-header">
-                <span class="question-type">单选题</span>
-                <span class="question-score">1.0 分</span>
-            </div>
-            <div class="question-text" id="questionText">问题内容</div>
-            
-            <div class="multiselect-hint" id="multiselectHint" style="display: none;">
-                提示：这是一道多选题，请选择所有正确答案
+        <!-- 测验内容 -->
+        <div class="tab-content active" id="quizContent">
+            <div class="mode-selector">
+                <button class="mode-btn" id="sequentialMode">顺序做题</button>
+                <button class="mode-btn" id="randomMode">随机做题</button>
+                <button class="mode-btn" id="mistakesMode">错题重做</button>
             </div>
             
-            <div class="options-container" id="optionsContainer">
-                <!-- 选项将在这里动态生成 -->
+            <div class="question-container">
+                <div class="question-header">
+                    <span class="question-type">单选题</span>
+                    <span class="question-score">1.0 分</span>
+                </div>
+                <div class="question-text" id="questionText">问题内容</div>
+                
+                <div class="multiselect-hint" id="multiselectHint" style="display: none;">
+                    提示：这是一道多选题，请选择所有正确答案
+                </div>
+                
+                <div class="options-container" id="optionsContainer">
+                    <!-- 选项将在这里动态生成 -->
+                </div>
+                
+                <div class="feedback" id="feedback"></div>
             </div>
             
-            <div class="feedback" id="feedback"></div>
+            <div class="controls">
+				<button class "btn lastq-btn" id="lastQuestionBtn">上一题</button>
+                <button class="btn submit-btn" id="submitBtn">提交答案</button>
+                <button class="btn reset-btn" id="resetBtn">重新开始</button>
+                <button class="btn retry-btn" id="retryMistakesBtn" style="display: none;">重做错题</button>
+            </div>
+            
+            <div class="progress" id="progress">第 1 题 / 共 3 题</div>
+            
+            <div class="result" id="result">
+                <h2>测验完成！</h2>
+                <p>你已经完成了所有题目。</p>
+                <div class="result-stats" id="resultStats"></div>
+                <p>点击"重新开始"开始新的测验。</p>
+            </div>
         </div>
         
-        <div class="controls">
-            <button class="btn submit-btn" id="submitBtn" disabled>提交答案</button>
-            <button class="btn reset-btn" id="resetBtn">重新开始</button>
-        </div>
-        
-        <div class="progress" id="progress">第 1 题 / 共 3 题</div>
-        
-        <div class="result" id="result">
-            <h2>测验完成！</h2>
-            <p>你已经完成了所有题目。</p>
-            <p>点击"重新开始"开始新的测验。</p>
+        <!-- 错题本内容 -->
+        <div class="tab-content" id="mistakesContent">
+            <div class="mistakes-container">
+                <div class="mistakes-header">
+                    <div class="mistakes-title">我的错题本</div>
+                    <div class="mistakes-count" id="mistakesCount">0</div>
+                </div>
+                <div id="mistakesList">
+                    <div class="empty-mistakes">暂无错题记录</div>
+                </div>
+            </div>
+            <div class="controls" style="margin-top: 20px;">
+                <button class="btn retry-btn" id="retryFromMistakes">重做错题</button>
+                <button class="btn reset-btn" id="clearMistakes">清空错题</button>
+            </div>
         </div>
     </div>
 
@@ -935,46 +1091,96 @@
     "选项": "A. 组织同投机资本作斗争的“银元之战”和“米棉之战”\nB. 抗美援朝，保家卫国\nC. 废除帝国主义国家依据不平等条约在中国享有一切特权\nD. 进行废除封建土地制度的改革",
     "正确答案": "ABCD"
   }
-};
+        };
         
         // 应用状态
-        let currentMode = 'sequential'; // 'sequential' 或 'random'
+        let currentMode = 'sequential'; // 'sequential', 'random', 'mistakes'
         let questions = [];
         let currentQuestionIndex = 0;
         let answeredCorrectly = false;
         let shuffledQuestions = [];
         let currentQuestionType = 'single'; // 'single' 或 'multiple'
         let userSelection = [];
+        let mistakes = []; // 错题记录
+        let totalQuestions = 0;
+        let correctCount = 0;
+        let isQuizCompleted = false;
         
         // DOM 元素
+        const quizTab = document.getElementById('quizTab');
+        const mistakesTab = document.getElementById('mistakesTab');
+        const quizContent = document.getElementById('quizContent');
+        const mistakesContent = document.getElementById('mistakesContent');
         const sequentialModeBtn = document.getElementById('sequentialMode');
         const randomModeBtn = document.getElementById('randomMode');
+        const mistakesModeBtn = document.getElementById('mistakesMode');
         const questionText = document.getElementById('questionText');
         const optionsContainer = document.getElementById('optionsContainer');
         const feedback = document.getElementById('feedback');
         const submitBtn = document.getElementById('submitBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const retryMistakesBtn = document.getElementById('retryMistakesBtn');
         const progress = document.getElementById('progress');
         const result = document.getElementById('result');
+        const resultStats = document.getElementById('resultStats');
         const multiselectHint = document.getElementById('multiselectHint');
         const questionTypeEl = document.querySelector('.question-type');
         const questionScoreEl = document.querySelector('.question-score');
+        const mistakesList = document.getElementById('mistakesList');
+        const mistakesCount = document.getElementById('mistakesCount');
+        const retryFromMistakes = document.getElementById('retryFromMistakes');
+        const clearMistakes = document.getElementById('clearMistakes');
         
         // 初始化应用
         function init() {
+            // 从 localStorage 加载错题记录
+            loadMistakes();
+            updateMistakesView();
+            
+            // 设置选项卡事件
+            quizTab.addEventListener('click', () => switchTab('quiz'));
+            mistakesTab.addEventListener('click', () => switchTab('mistakes'));
+            
             // 设置模式按钮事件
             sequentialModeBtn.addEventListener('click', () => setMode('sequential'));
             randomModeBtn.addEventListener('click', () => setMode('random'));
+            mistakesModeBtn.addEventListener('click', () => setMode('mistakes'));
             
             // 设置控制按钮事件
             submitBtn.addEventListener('click', submitAnswer);
             resetBtn.addEventListener('click', resetQuiz);
+            retryMistakesBtn.addEventListener('click', () => setMode('mistakes'));
+            retryFromMistakes.addEventListener('click', () => {
+                if (mistakes.length > 0) {
+                    switchTab('quiz');
+                    setMode('mistakes');
+                } else {
+                    alert('暂无错题可重做');
+                }
+            });
+            clearMistakes.addEventListener('click', clearAllMistakes);
             
             // 初始化问题列表
             questions = Object.keys(quizData);
+            totalQuestions = questions.length;
             
             // 默认使用顺序模式
             setMode('sequential');
+        }
+        
+        // 切换选项卡
+        function switchTab(tab) {
+            if (tab === 'quiz') {
+                quizTab.classList.add('active');
+                mistakesTab.classList.remove('active');
+                quizContent.classList.add('active');
+                mistakesContent.classList.remove('active');
+            } else {
+                quizTab.classList.remove('active');
+                mistakesTab.classList.add('active');
+                quizContent.classList.remove('active');
+                mistakesContent.classList.add('active');
+            }
         }
         
         // 设置模式
@@ -984,6 +1190,7 @@
             // 更新按钮状态
             sequentialModeBtn.classList.toggle('active', mode === 'sequential');
             randomModeBtn.classList.toggle('active', mode === 'random');
+            mistakesModeBtn.classList.toggle('active', mode === 'mistakes');
             
             // 重置测验
             resetQuiz();
@@ -991,18 +1198,33 @@
         
         // 重置测验
         function resetQuiz() {
-            if (currentMode === 'random') {
+            isQuizCompleted = false;
+            result.classList.remove('show');
+            submitBtn.style.display = 'inline-block';
+            retryMistakesBtn.style.display = 'none';
+            
+            if (currentMode === 'mistakes') {
+                // 错题重做模式
+                if (mistakes.length === 0) {
+                    alert('暂无错题记录');
+                    setMode('sequential');
+                    return;
+                }
+                shuffledQuestions = [...mistakes.map(m => m.question)];
+                correctCount = 0;
+            } else if (currentMode === 'random') {
                 // 随机模式：打乱问题顺序
                 shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+                correctCount = 0;
             } else {
                 // 顺序模式：保持原始顺序
                 shuffledQuestions = [...questions];
+                correctCount = 0;
             }
             
             currentQuestionIndex = 0;
             answeredCorrectly = false;
             userSelection = [];
-            result.classList.remove('show');
             displayQuestion();
         }
         
@@ -1010,8 +1232,15 @@
         function displayQuestion() {
             if (currentQuestionIndex >= shuffledQuestions.length) {
                 // 所有问题已完成
+                isQuizCompleted = true;
                 result.classList.add('show');
                 submitBtn.style.display = 'none';
+                retryMistakesBtn.style.display = 'inline-block';
+                
+                // 显示结果统计
+                const total = shuffledQuestions.length;
+                const percentage = Math.round((correctCount / total) * 100);
+                resultStats.innerHTML = `答对 ${correctCount}/${total} 题 (${percentage}%)`;
                 return;
             }
             
@@ -1075,7 +1304,6 @@
             // 重置反馈
             feedback.className = 'feedback';
             feedback.textContent = '';
-            submitBtn.disabled = true;
             
             // 更新进度
             progress.textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${shuffledQuestions.length} 题`;
@@ -1093,15 +1321,13 @@
             
             // 清除之前的选中状态
             document.querySelectorAll('.option').forEach(opt => {
-                opt.classList.remove('selected', 'correct', 'incorrect');
+                opt.classList.remove('selected');
             });
             
             // 标记当前选中
             selectedOption.classList.add('selected');
             userSelection = [selectedOption.dataset.option];
             
-            // 启用提交按钮
-            submitBtn.disabled = false;
         }
         
         // 多选题选择
@@ -1120,8 +1346,6 @@
                 userSelection.push(optionValue);
             }
             
-            // 启用提交按钮（至少选择一个选项）
-            submitBtn.disabled = userSelection.length === 0;
         }
         
         // 提交答案
@@ -1147,6 +1371,44 @@
                 const sortedUserSelection = [...userSelection].sort();
                 const sortedCorrectOptions = [...correctOptions].sort();
                 isCorrect = JSON.stringify(sortedUserSelection) === JSON.stringify(sortedCorrectOptions);
+            } else {
+                // 单选题处理
+                const correctOption = correctAnswer.replace('正确答案:', '');
+                isCorrect = userSelection[0] === correctOption;
+            }
+            
+            // 标记选项状态
+            markOptions(isCorrect, correctAnswer, isMultiSelect);
+            
+            // 显示反馈
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = '回答正确！';
+                answeredCorrectly = true;
+                correctCount++;
+
+            } else {
+                feedback.className = 'feedback incorrect';
+                if (isMultiSelect) {
+                    const correctOptions = correctAnswer.replace('正确答案:', '');
+                    feedback.textContent = `回答错误！正确答案: ${correctOptions}`;
+                } else {
+                    const correctOption = correctAnswer.replace('正确答案:', '');
+                    feedback.textContent = `回答错误！正确答案是: ${correctOption}`;
+                }
+                
+                // 记录错题（如果不是在错题重做模式）
+                if (currentMode !== 'mistakes') {
+                    addToMistakes(currentQuestion, userSelection.join(''));
+                    updateMistakesView();
+                }
+            }
+        }
+        
+        // 标记选项状态
+        function markOptions(isCorrect, correctAnswer, isMultiSelect) {
+            if (isMultiSelect) {
+                const correctOptions = correctAnswer.replace('正确答案:', '').split('');
                 
                 // 标记所有选项的状态
                 correctOptions.forEach(opt => {
@@ -1168,15 +1430,8 @@
                     }
                 });
             } else {
-                // 单选题处理
                 const correctOption = correctAnswer.replace('正确答案:', '');
-	
-                isCorrect = userSelection[0] === correctOption;
-                			if(correctOption.includes("错") || correctOption.includes("对"))
-				{
-					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
-					isCorrect = userSelection.includes(correctOption)
-				}
+                
                 // 标记用户选择的选项
                 const selectedOption = document.querySelector(`.option[data-option="${userSelection[0]}"]`);
                 if (selectedOption) {
@@ -1193,30 +1448,96 @@
                     if (correctOptionEl) correctOptionEl.classList.add('correct');
                 }
             }
+        }
+        
+        // 重置并进入下一题
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            if (answeredCorrectly) {
+                currentQuestionIndex++;
+                answeredCorrectly = false;
+                userSelection = [];
+                displayQuestion();
+            }
+        });
+		
+		document.getElementById('lastQuestionBtn').addEventListener('click', function() {
+			currentQuestionIndex--;
+			answeredCorrectly = false;
+			userSelection = [];
+			displayQuestion();
+        });
+        
+        // 错题记录功能
+        function addToMistakes(question, userAnswer) {
+            const correctAnswer = quizData[question]['正确答案'].replace('正确答案:', '');
             
-            // 显示反馈
-            if (isCorrect) {
-                feedback.className = 'feedback correct';
-                feedback.textContent = '回答正确！';
-                answeredCorrectly = true;
-                submitBtn.disabled = true;
-			   if (answeredCorrectly) {
-					currentQuestionIndex++;
-					answeredCorrectly = false;
-					userSelection = [];
-					displayQuestion();
-				}
-            } else {
-                feedback.className = 'feedback incorrect';
-                if (isMultiSelect) {
-                    const correctOptions = correctAnswer.replace('正确答案:', '');
-                    feedback.textContent = `回答错误！正确答案: ${correctOptions}`;
-                } else {
-                    const correctOption = correctAnswer.replace('正确答案:', '');
-                    feedback.textContent = `回答错误！正确答案是: ${correctOption}`;
+            // 检查是否已存在
+            const existingIndex = mistakes.findIndex(m => m.question === question);
+            if (existingIndex === -1) {
+                mistakes.push({
+                    question: question,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
+                });
+                saveMistakes();
+            }
+        }
+        
+        function removeFromMistakes(question) {
+            mistakes = mistakes.filter(m => m.question !== question);
+            saveMistakes();
+        }
+        
+        function clearAllMistakes() {
+            if (confirm('确定要清空所有错题记录吗？')) {
+                mistakes = [];
+                saveMistakes();
+                updateMistakesView();
+                if (currentMode === 'mistakes') {
+                    setMode('sequential');
                 }
             }
         }
+        
+        function saveMistakes() {
+            localStorage.setItem('quizMistakes', JSON.stringify(mistakes));
+        }
+        
+        function loadMistakes() {
+            const saved = localStorage.getItem('quizMistakes');
+            if (saved) {
+                mistakes = JSON.parse(saved);
+                // 验证错题是否仍在题库中
+                mistakes = mistakes.filter(m => questions.includes(m.question));
+            }
+        }
+        
+        function updateMistakesView() {
+            mistakesCount.textContent = mistakes.length;
+            
+            if (mistakes.length === 0) {
+                mistakesList.innerHTML = '<div class="empty-mistakes">暂无错题记录</div>';
+                return;
+            }
+            
+            mistakesList.innerHTML = '';
+            mistakes.forEach(mistake => {
+                const mistakeItem = document.createElement('div');
+                mistakeItem.className = 'mistake-item';
+                
+                const questionText = extractQuestionText(mistake.question);
+                const questionType = mistake.question.match(/\(([^,]+),/)[1];
+                
+                mistakeItem.innerHTML = `
+                    <div class="mistake-question">[${questionType}] ${questionText}</div>
+                    <div class="mistake-user">你的答案: ${mistake.userAnswer}</div>
+                    <div class="mistake-correct">正确答案: ${mistake.correctAnswer}</div>
+                `;
+                
+                mistakesList.appendChild(mistakeItem);
+            });
+        }
+        
         // 初始化应用
         window.addEventListener('DOMContentLoaded', init);
     </script>
