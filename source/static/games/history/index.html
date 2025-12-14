@@ -1431,7 +1431,12 @@
                 });
             } else {
                 const correctOption = correctAnswer.replace('正确答案:', '');
-                
+                            isCorrect = userSelection[0] === correctOption;
+                			if(correctOption.includes("错") || correctOption.includes("对"))
+				{
+					userSelection[0] = userSelection[0].replace("A", "对").replace("B", "错")
+					isCorrect = userSelection.includes(correctOption)
+				}
                 // 标记用户选择的选项
                 const selectedOption = document.querySelector(`.option[data-option="${userSelection[0]}"]`);
                 if (selectedOption) {
